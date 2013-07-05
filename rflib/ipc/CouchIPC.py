@@ -8,9 +8,6 @@ TYPE_FIELD = "type"
 READ_FIELD = "read"
 CONTENT_FIELD = "content"
 
-# 1 MB for the capped collection
-CC_SIZE = 1048576
-
 def put_in_envelope(from_, to, msg):
     envelope = {}
 
@@ -29,52 +26,44 @@ def take_from_envelope(envelope, factory):
     msg = factory.build_for_type(envelope[TYPE_FIELD]);
     msg.from_dict(envelope[CONTENT_FIELD]);
     return msg;
-
-def format_address(address):
-    try:
-        tmp = address.split(":")
-        if len(tmp) == 2:
-            return (tmp[0], int(tmp[1]))
-        elif len(tmp) == 1:
-            return (tmp[0],)
-    except:
-        raise ValueError, "Invalid address: " + str(address)
             
-class MongoIPCMessageService(IPC.IPCMessageService):
-    def __init__(self, address, db, id_, thread_constructor, sleep_function):
+class CouchIPCMessageService(IPC.IPCMessageService):
+    def __init__(self, bucket, hosts, thread_constructor, sleep_function):
         """Construct an IPCMessageService
 
         Args:
-            address: designates where the MongoDB instance is running.
-            db: is the database name to connect to on MongoDB.
-            id_: is an identifier to allow messages to be directed to the
-                appropriate recipient.
+            bucket: Bucket name of CouchBase.
+            hosts: list of hosts in the CouchBase cluster.
             thread_constructor: function that takes 'target' and 'args'
                 parameters for the function to run and arguments to pass, and
                 return an object that has start() and join() functions.
             sleep_function: function that takes a float and delays processing
                 for the specified period.
         """
-        self._db = db
-        self.address = format_address(address)
-        self._id = id_
-        self._producer_connection = mongo.Connection(*self.address)
+        self._bucket = bucket
+        self._hosts = format_address(address)
+        self._producer_connection = Couchbase.connect(
+                bucket=_bucket,
+                hosts=_hosts
+            )
         self._threading = thread_constructor
         self._sleep = sleep_function
-        
+    
+    #mudar...
     def listen(self, channel_id, factory, processor, block=True):
         worker = self._threading(target=self._listen_worker,
                                  args=(channel_id, factory, processor))
         worker.start()
         if block:
             worker.join()
-        
-    def send(self, channel_id, to, msg):
+    
+    def send(self, to, msg):
         self._create_channel(self._producer_connection, channel_id)
         collection = self._producer_connection[self._db][channel_id]
         collection.insert(put_in_envelope(self.get_id(), to, msg))
         return True
 
+    #mudar...
     def _listen_worker(self, channel_id, factory, processor):
         connection = mongo.Connection(*self.address)
         self._create_channel(connection, channel_id)
@@ -89,7 +78,8 @@ class MongoIPCMessageService(IPC.IPCMessageService):
                 collection.update({"_id": envelope["_id"]}, {"$set": {READ_FIELD: True}})
             self._sleep(0.05)
             cursor = collection.find({TO_FIELD: self.get_id(), READ_FIELD: False}, sort=[("_id", mongo.ASCENDING)])
-                
+            
+    #mudar...
     def _create_channel(self, connection, name):
         db = connection[self._db]
         try:
@@ -101,6 +91,7 @@ class MongoIPCMessageService(IPC.IPCMessageService):
         except:
             pass
 
+#mudar...
 class MongoIPCMessage(dict, IPC.IPCMessage):
     def __init__(self, type_, **kwargs):
         dict.__init__(self)
