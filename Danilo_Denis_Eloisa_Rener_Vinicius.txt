@@ -8,3 +8,20 @@
     Available in: <http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-admin-tasks-addremove-rebalance.html>
 
 4 - Lembrar de configurar o arquivo *******************, no campo host, com a lista de todos os servidores no modo cluster.
+
+OBS:
+
+Scripts
+Instalação do CouchBase Server ->
+Desenvolvimento -> dev.sh
+
+CouchBase
+
+Criar uma view e publicar no CouchBase
+
+CouchIPC.py
+Alterações no para criar a conexão
+
+
+
+
