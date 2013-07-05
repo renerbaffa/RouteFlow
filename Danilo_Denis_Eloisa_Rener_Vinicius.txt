@@ -1,0 +1,10 @@
+1 - Instalar o CouchBase na máquina principal e criar o bucket com as configurações desejadas.
+    Available in: <http://www.couchbase.com/download>
+
+2 - Instalar o CouchBase nos servidores escolhendo a opção "Join Cluster Now", adicionando o usuário, senha e IP do servidor principal. 
+    Available in: <http://www.couchbase.com/docs/couchbase-manual-1.8/couchbase-getting-started-setup.html>
+
+3 - Acessando o CouchBase pela URL (porta 8091), na aba "Server Nodes" clicar em "Rebalance", para balancear o uso de cada nó.
+    Available in: <http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-admin-tasks-addremove-rebalance.html>
+
+4 - Lembrar de configurar o arquivo *******************, no campo host, com a lista de todos os servidores no modo cluster.
