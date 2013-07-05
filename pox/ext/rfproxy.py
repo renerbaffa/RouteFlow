@@ -64,7 +64,7 @@ class Table:
 netmask_prefix = lambda a: sum([bin(int(x)).count("1") for x in a.split(".", 4)])
 
 #ipc = MongoIPC.MongoIPCMessageService(MONGO_ADDRESS, MONGO_DB_NAME, str(ID), threading.Thread, time.sleep)
-ipc = CouchIPC.CouchIPCMessageService ( COUCH_HOSTS, COUCH_BUCKET, threading.Thread, time.sleep)
+ipc = CouchIPC.CouchIPCMessageService ( COUCH_HOST, COUCH_BUCKET, threading.Thread, time.sleep)
 table = Table()
 
 # Logging

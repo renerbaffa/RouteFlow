@@ -1,7 +1,7 @@
 MONGO_ADDRESS = "192.169.1.1:27017"
 MONGO_DB_NAME = "db"
 
-COUCH_HOSTS = ["rener-notebook.local", "elantra-CQ43.local", "rener-IPMH67.local"]
+COUCH_HOST = "rener-IPMH67.local"
 COUCH_BUCKET = "default"
 COUCH_INITIAL_VALUE = 0
 

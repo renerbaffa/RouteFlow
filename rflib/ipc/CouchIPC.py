@@ -1,6 +1,7 @@
 from couchbase import Couchbase
 
 import rflib.ipc.IPC as IPC
+from rflib.defs import *
 
 FROM_FIELD = "from"
 TO_FIELD = "to"
@@ -28,27 +29,27 @@ def take_from_envelope(envelope, factory):
     return msg;
             
 class CouchIPCMessageService(IPC.IPCMessageService):
-    def __init__(self, hosts, bucket, thread_constructor, sleep_function):
+    def __init__(self, host, bucket, thread_constructor, sleep_function):
         """Construct an IPCMessageService
 
         Args:
             bucket: Bucket name of CouchBase.
-            hosts: list of hosts in the CouchBase cluster.
+            host: list of hosts in the CouchBase cluster.
             thread_constructor: function that takes 'target' and 'args'
                 parameters for the function to run and arguments to pass, and
                 return an object that has start() and join() functions.
             sleep_function: function that takes a float and delays processing
                 for the specified period.
         """
-        self._hosts = format_address(address)
+        self._host = host
         self._bucket = bucket
-        self._producer_connection = Couchbase.connect(
-                bucket=_bucket,
-                hosts=_hosts
+        self._connection = Couchbase.connect(
+                bucket=self._bucket,
+                host=self._hosts
             )
         self._threading = thread_constructor
         self._sleep = sleep_function
-        self.set("key", COUCH_INITIAL_VALUE)
+        self._connection.set("key", COUCH_INITIAL_VALUE)
     
     #mudar...
     def listen(self, channel_id, factory, processor, block=True):
@@ -59,8 +60,8 @@ class CouchIPCMessageService(IPC.IPCMessageService):
             worker.join()
     
     def send(self, to, msg):
-        key = self.incr("key")
-        self.set( key, put_in_envelope(self.get_id(), to, msg) )
+        key = self._connection.incr("key")
+        self._connection.set( key, put_in_envelope(self.get_id(), to, msg) )
         return True
 
     #mudar...
