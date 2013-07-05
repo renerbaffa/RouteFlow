@@ -28,7 +28,7 @@ def take_from_envelope(envelope, factory):
     return msg;
             
 class CouchIPCMessageService(IPC.IPCMessageService):
-    def __init__(self, bucket, hosts, thread_constructor, sleep_function):
+    def __init__(self, hosts, bucket, thread_constructor, sleep_function):
         """Construct an IPCMessageService
 
         Args:
@@ -40,14 +40,15 @@ class CouchIPCMessageService(IPC.IPCMessageService):
             sleep_function: function that takes a float and delays processing
                 for the specified period.
         """
-        self._bucket = bucket
         self._hosts = format_address(address)
+        self._bucket = bucket
         self._producer_connection = Couchbase.connect(
                 bucket=_bucket,
                 hosts=_hosts
             )
         self._threading = thread_constructor
         self._sleep = sleep_function
+        self.set("key", COUCH_INITIAL_VALUE)
     
     #mudar...
     def listen(self, channel_id, factory, processor, block=True):
@@ -58,9 +59,8 @@ class CouchIPCMessageService(IPC.IPCMessageService):
             worker.join()
     
     def send(self, to, msg):
-        self._create_channel(self._producer_connection, channel_id)
-        collection = self._producer_connection[self._db][channel_id]
-        collection.insert(put_in_envelope(self.get_id(), to, msg))
+        key = self.incr("key")
+        self.set( key, put_in_envelope(self.get_id(), to, msg) )
         return True
 
     #mudar...

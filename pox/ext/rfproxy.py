@@ -63,10 +63,8 @@ class Table:
 
 netmask_prefix = lambda a: sum([bin(int(x)).count("1") for x in a.split(".", 4)])
 
-# TODO: add proper support for ID
-ID = 0
-ipc = MongoIPC.MongoIPCMessageService(MONGO_ADDRESS, MONGO_DB_NAME, str(ID),
-                                      threading.Thread, time.sleep)
+#ipc = MongoIPC.MongoIPCMessageService(MONGO_ADDRESS, MONGO_DB_NAME, str(ID), threading.Thread, time.sleep)
+ipc = CouchIPC.CouchIPCMessageService ( COUCH_HOSTS, COUCH_BUCKET, threading.Thread, time.sleep)
 table = Table()
 
 # Logging
