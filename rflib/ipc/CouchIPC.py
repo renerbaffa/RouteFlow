@@ -1,6 +1,10 @@
 from couchbase import Couchbase
 
+import pymongo as mongo
+import bson
+
 import rflib.ipc.IPC as IPC
+from rflib.defs import *
 
 FROM_FIELD = "from"
 TO_FIELD = "to"
@@ -28,7 +32,7 @@ def take_from_envelope(envelope, factory):
     return msg;
             
 class CouchIPCMessageService(IPC.IPCMessageService):
-    def __init__(self, hosts, bucket, thread_constructor, sleep_function):
+    def __init__(self, host, bucket, id_, thread_constructor, sleep_function):
         """Construct an IPCMessageService
 
         Args:
@@ -40,15 +44,16 @@ class CouchIPCMessageService(IPC.IPCMessageService):
             sleep_function: function that takes a float and delays processing
                 for the specified period.
         """
-        self._hosts = format_address(address)
+        self._host = host
         self._bucket = bucket
-        self._producer_connection = Couchbase.connect(
-                bucket=_bucket,
-                hosts=_hosts
+        self._connection = Couchbase.connect(
+                bucket=self._bucket,
+                host=self._host
             )
+        self._id = id_
         self._threading = thread_constructor
         self._sleep = sleep_function
-        self.set("key", COUCH_INITIAL_VALUE)
+        self._connection.set("key", COUCH_INITIAL_VALUE)
     
     #mudar...
     def listen(self, channel_id, factory, processor, block=True):
@@ -58,22 +63,31 @@ class CouchIPCMessageService(IPC.IPCMessageService):
         if block:
             worker.join()
     
-    def send(self, to, msg):
-        key = self.incr("key")
-        self.set( key, put_in_envelope(self.get_id(), to, msg) )
+    def send(self, channel_id, to, msg):
+        key = self._connection.incr("key")
+        envelope = put_in_envelope(self.get_id(), to, msg)
+        key = "{0}-{1}-{2}".format(
+            envelope[CONTENT_FIELD]['dp_id'],
+            envelope[CONTENT_FIELD]['ct_id'],
+            envelope[CONTENT_FIELD]['dp_port'])
+        self._connection.set( key, put_in_envelope(self.get_id(), to, msg) )
         return True
 
+    # Denis alterou
     #mudar...
     def _listen_worker(self, channel_id, factory, processor):
-        connection = mongo.Connection(*self.address)
+    #   collection = self._connection
+    #   cursor = collection.query("all", "default_all" {TO_FIELD: self.get_id(), READ_FIELD: False}, sort=[("_id", mongo.ASCENDING)])
+        connection = mongo.Connection(MONGO_ADDRESS)
         self._create_channel(connection, channel_id)
-        
-        collection = connection[self._db][channel_id]
+        collection = connection[MONGO_DB_NAME][channel_id]
         cursor = collection.find({TO_FIELD: self.get_id(), READ_FIELD: False}, sort=[("_id", mongo.ASCENDING)])
-
         while True:
             for envelope in cursor:
                 msg = take_from_envelope(envelope, factory)
+                print "\n\n\n\n\n\n\n\n\n\n"
+                print msg
+                print "\n\n\n\n\n\n\n\n\n\n"
                 processor.process(envelope[FROM_FIELD], envelope[TO_FIELD], channel_id, msg);
                 collection.update({"_id": envelope["_id"]}, {"$set": {READ_FIELD: True}})
             self._sleep(0.05)
@@ -81,7 +95,7 @@ class CouchIPCMessageService(IPC.IPCMessageService):
             
     #mudar...
     def _create_channel(self, connection, name):
-        db = connection[self._db]
+        db = connection[MONGO_DB_NAME]
         try:
             collection = mongo.collection.Collection(db, name, None, True, capped=True, size=CC_SIZE)
             collection.ensure_index([("_id", mongo.ASCENDING)])
@@ -91,8 +105,7 @@ class CouchIPCMessageService(IPC.IPCMessageService):
         except:
             pass
 
-#mudar...
-class MongoIPCMessage(dict, IPC.IPCMessage):
+class CouchIPCMessage(dict, IPC.IPCMessage):
     def __init__(self, type_, **kwargs):
         dict.__init__(self)
         self.from_dict(kwargs)
@@ -106,11 +119,10 @@ class MongoIPCMessage(dict, IPC.IPCMessage):
             self[k] = v
         
     def from_bson(self, data):
-        data = bson.BSON.decode(data)
         self.from_dict(data)
 
     def to_bson(self):
-        return bson.BSON.encode(self)
+        return self
         
     def str(self):
         string = ""

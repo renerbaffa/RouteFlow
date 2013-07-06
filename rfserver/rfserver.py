@@ -41,12 +41,17 @@ class RFServer(RFProtocolFactory, IPC.IPCMessageProcessor):
         ch.setFormatter(logging.Formatter(logging.BASIC_FORMAT))
         self.log.addHandler(ch)
 
+        self.ipc = CouchIPC.CouchIPCMessageService( COUCH_HOST, COUCH_BUCKET, RFSERVER_ID, threading.Thread, time.sleep )
+        '''
         self.ipc = MongoIPC.MongoIPCMessageService(MONGO_ADDRESS,
                                                    MONGO_DB_NAME,
                                                    RFSERVER_ID,
                                                    threading.Thread,
                                                    time.sleep)
+        '''
+        # alterar funcoes no listen
         self.ipc.listen(RFCLIENT_RFSERVER_CHANNEL, self, self, False)
+        # alterar funcoes no listen
         self.ipc.listen(RFSERVER_RFPROXY_CHANNEL, self, self, True)
 
     def process(self, from_, to, channel, msg):
