@@ -32,12 +32,16 @@ def take_from_envelope(envelope, factory):
     return msg;
             
 class CouchIPCMessageService(IPC.IPCMessageService):
+<<<<<<< HEAD
     def __init__(self, host, bucket, id_, thread_constructor, sleep_function):
+=======
+    def __init__(self, host, bucket, thread_constructor, sleep_function):
+>>>>>>> f9fa76cfa6c57ec36b782a9667a0aca2d8df3fed
         """Construct an IPCMessageService
 
         Args:
             bucket: Bucket name of CouchBase.
-            hosts: list of hosts in the CouchBase cluster.
+            host: list of hosts in the CouchBase cluster.
             thread_constructor: function that takes 'target' and 'args'
                 parameters for the function to run and arguments to pass, and
                 return an object that has start() and join() functions.
@@ -48,7 +52,11 @@ class CouchIPCMessageService(IPC.IPCMessageService):
         self._bucket = bucket
         self._connection = Couchbase.connect(
                 bucket=self._bucket,
+<<<<<<< HEAD
                 host=self._host
+=======
+                host=self._hosts
+>>>>>>> f9fa76cfa6c57ec36b782a9667a0aca2d8df3fed
             )
         self._id = id_
         self._threading = thread_constructor
@@ -63,6 +71,7 @@ class CouchIPCMessageService(IPC.IPCMessageService):
         if block:
             worker.join()
     
+<<<<<<< HEAD
     def send(self, channel_id, to, msg):
         key = self._connection.incr("key")
         envelope = put_in_envelope(self.get_id(), to, msg)
@@ -70,6 +79,10 @@ class CouchIPCMessageService(IPC.IPCMessageService):
             envelope[CONTENT_FIELD]['dp_id'],
             envelope[CONTENT_FIELD]['ct_id'],
             envelope[CONTENT_FIELD]['dp_port'])
+=======
+    def send(self, to, msg):
+        key = self._connection.incr("key")
+>>>>>>> f9fa76cfa6c57ec36b782a9667a0aca2d8df3fed
         self._connection.set( key, put_in_envelope(self.get_id(), to, msg) )
         return True
 
