@@ -1,7 +1,5 @@
-from couchbase import Couchbase
-
-import pymongo as mongo
-import bson
+from couchbase import Couchbase, LOCKMODE_WAIT
+import couchbase.views
 
 import rflib.ipc.IPC as IPC
 from rflib.defs import *
@@ -37,7 +35,7 @@ class CouchIPCMessageService(IPC.IPCMessageService):
 
         Args:
             bucket: Bucket name of CouchBase.
-            host: list of hosts in the CouchBase cluster.
+            hosts: list of hosts in the CouchBase cluster.
             thread_constructor: function that takes 'target' and 'args'
                 parameters for the function to run and arguments to pass, and
                 return an object that has start() and join() functions.
@@ -64,46 +62,29 @@ class CouchIPCMessageService(IPC.IPCMessageService):
             worker.join()
     
     def send(self, channel_id, to, msg):
-        key = self._connection.incr("key")
+        key = self._connection.incr("key").value
         envelope = put_in_envelope(self.get_id(), to, msg)
-        key = "{0}-{1}-{2}".format(
-            envelope[CONTENT_FIELD]['dp_id'],
-            envelope[CONTENT_FIELD]['ct_id'],
-            envelope[CONTENT_FIELD]['dp_port'])
-        self._connection.set( key, put_in_envelope(self.get_id(), to, msg) )
+        key = "{0}-{1}".format( key, to)
+        self._connection.set( str(key), envelope )
         return True
 
     # Denis alterou
     #mudar...
     def _listen_worker(self, channel_id, factory, processor):
-    #   collection = self._connection
-    #   cursor = collection.query("all", "default_all" {TO_FIELD: self.get_id(), READ_FIELD: False}, sort=[("_id", mongo.ASCENDING)])
-        connection = mongo.Connection(MONGO_ADDRESS)
-        self._create_channel(connection, channel_id)
-        collection = connection[MONGO_DB_NAME][channel_id]
-        cursor = collection.find({TO_FIELD: self.get_id(), READ_FIELD: False}, sort=[("_id", mongo.ASCENDING)])
+        connection = Couchbase.connect(
+                bucket=self._bucket,
+                host=self._host,
+        )
         while True:
+            cursor = connection.query("all", "filter")
             for envelope in cursor:
-                msg = take_from_envelope(envelope, factory)
-                print "\n\n\n\n\n\n\n\n\n\n"
-                print msg
-                print "\n\n\n\n\n\n\n\n\n\n"
-                processor.process(envelope[FROM_FIELD], envelope[TO_FIELD], channel_id, msg);
-                collection.update({"_id": envelope["_id"]}, {"$set": {READ_FIELD: True}})
-            self._sleep(0.05)
-            cursor = collection.find({TO_FIELD: self.get_id(), READ_FIELD: False}, sort=[("_id", mongo.ASCENDING)])
-            
-    #mudar...
-    def _create_channel(self, connection, name):
-        db = connection[MONGO_DB_NAME]
-        try:
-            collection = mongo.collection.Collection(db, name, None, True, capped=True, size=CC_SIZE)
-            collection.ensure_index([("_id", mongo.ASCENDING)])
-            collection.ensure_index([(TO_FIELD, mongo.ASCENDING)])
-        # TODO: improve this catch. It should be more specific, but pymongo
-        # behavior doesn't match its documentation, so we are being dirty.
-        except:
-            pass
+                if envelope.value[TO_FIELD] == self.get_id():
+                    msg = take_from_envelope(envelope.value, factory)
+                    processor.process(envelope.value[FROM_FIELD], envelope.value[TO_FIELD], channel_id, msg);
+                    envelope.value[READ_FIELD] = True
+                    self._connection.set(envelope.docid, envelope.value)
+                # work is better without with CouchBase
+                #self._sleep(0.05)
 
 class CouchIPCMessage(dict, IPC.IPCMessage):
     def __init__(self, type_, **kwargs):

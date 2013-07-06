@@ -5,10 +5,8 @@ import time
 
 from pox.core import core
 from pox.openflow.libopenflow_01 import *
-import pymongo as mongo
 
 import rflib.ipc.IPC as IPC
-import rflib.ipc.MongoIPC as MongoIPC
 import rflib.ipc.CouchIPC as CouchIPC
 from rflib.ipc.RFProtocol import *
 from rflib.ipc.RFProtocolFactory import RFProtocolFactory
@@ -64,7 +62,6 @@ class Table:
 
 netmask_prefix = lambda a: sum([bin(int(x)).count("1") for x in a.split(".", 4)])
 
-#ipc = MongoIPC.MongoIPCMessageService(MONGO_ADDRESS, MONGO_DB_NAME, str(ID), threading.Thread, time.sleep)
 ipc = CouchIPC.CouchIPCMessageService ( COUCH_HOST, COUCH_BUCKET, str(ID), threading.Thread, time.sleep)
 table = Table()
 

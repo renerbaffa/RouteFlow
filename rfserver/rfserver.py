@@ -8,10 +8,11 @@ import threading
 import time
 import argparse
 
-from bson.binary import Binary
+#from bson.binary import Binary
 
 import rflib.ipc.IPC as IPC
-import rflib.ipc.MongoIPC as MongoIPC
+#import rflib.ipc.MongoIPC as MongoIPC
+import rflib.ipc.CouchIPC as CouchIPC
 from rflib.ipc.RFProtocol import *
 from rflib.ipc.RFProtocolFactory import RFProtocolFactory
 from rflib.defs import *
