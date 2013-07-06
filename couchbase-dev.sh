@@ -10,7 +10,7 @@
 		apt-get install libcouchbase2 libcouchbase-dev python-pip python-dev
 		pip install couchbase
 	else
-		echo "Precisa ser root."
+		echo "You must be a root user."
 	fi
 
 exit 0
