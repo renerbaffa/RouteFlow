@@ -1,27 +1,22 @@
-1 - Instalar o CouchBase na máquina principal e criar o bucket com as configurações desejadas.
-    Available in: <http://www.couchbase.com/download>
+RESUMO DE ATIVIDADES
 
-2 - Instalar o CouchBase nos servidores escolhendo a opção "Join Cluster Now", adicionando o usuário, senha e IP do servidor principal. 
-    Available in: <http://www.couchbase.com/docs/couchbase-manual-1.8/couchbase-getting-started-setup.html>
-
-3 - Acessando o CouchBase pela URL (porta 8091), na aba "Server Nodes" clicar em "Rebalance", para balancear o uso de cada nó.
-    Available in: <http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-admin-tasks-addremove-rebalance.html>
-
-4 - Lembrar de configurar o arquivo *******************, no campo host, com a lista de todos os servidores no modo cluster.
-
-OBS:
-
-Scripts
-Instalação do CouchBase Server ->
-Desenvolvimento -> dev.sh
-
-CouchBase
-
-Criar uma view e publicar no CouchBase
-
-CouchIPC.py
-Alterações no para criar a conexão
+- Criamos um script para instalação do Couchbase (é o arquivo 'couchbase-server.sh').
+- Criamos um script para instalação da biblioteca e dependências para desenvolver com o Couchbase (é o arquivo 'couchbase-dev.sh').
+- Criamos a classe CouchIPC.py (responsável pela conexão com o novo banco de dados e que substitui o MongoIPC.py).
+- Retiramos as conversões de dados para/de bson para json (necessário no Mongo e não mais necessário).
 
 
 
+
+Alteramos os arquivos necessários para fazer o script rftest2 funcionar com o novo BD.
+
+Para funcionar, é necessário:
+
+1 - Instalar o Couchbase (mais informações em <http://www.couchbase.com/download>).
+2 - Criar um bucket com o nome 'routeflow' (pode ser outro nome. Mais instruções no passo 5).
+3 - Instalar o Couchbase nos demais servidores que farão parte do cluster através da opção 'Join cluster now' (mais informações em http://www.couchbase.com/docs/couchbase-manual-1.8/couchbase-getting-started-setup.html>), adicionando usuário, senha e IP do servidor principal (aquele dos passos 1 e 2).
+4 - O Couchbase possui uma interface (HTTP) para configuração e manipulação dos dados. Basta acessar o servidor local na porta 8091. Na aba 'Server Nodes', clicar em 'Rebalance' para balancear o uso de cada nó (mais informações em <http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-admin-tasks-addremove-rebalance.html>).
+5 - O arquivo rflib/defs.py possui os arquivos de configurações para conexão com o banco de dados. Lembre-se de colocar os IPs das máquinas em cluster na variável COUCH_HOST (exemplo: ["192.168.70.128", "192.168.70.129"]), o nome do Bucket criado na variável COUCH_BUCKET e o valor 0 na variável COUCH_INITIAL_VALUE (que é o valor inicial da chave do conteúdo que será inserido no BD).
+
+6 - FALAR SOBRE A VIEW ******************************************
 
