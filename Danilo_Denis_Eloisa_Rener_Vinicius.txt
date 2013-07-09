@@ -17,8 +17,24 @@ Para funcionar, é necessário:
 3 - Instalar o Couchbase nos demais servidores que farão parte do cluster através da opção 'Join cluster now' (mais informações em http://www.couchbase.com/docs/couchbase-manual-1.8/couchbase-getting-started-setup.html>), adicionando usuário, senha e IP do servidor principal (aquele dos passos 1 e 2).
 4 - O Couchbase possui uma interface (HTTP) para configuração e manipulação dos dados. Basta acessar o servidor local na porta 8091. Na aba 'Server Nodes', clicar em 'Rebalance' para balancear o uso de cada nó (mais informações em <http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-admin-tasks-addremove-rebalance.html>).
 5 - O arquivo rflib/defs.py possui os arquivos de configurações para conexão com o banco de dados. Lembre-se de colocar os IPs das máquinas em cluster na variável COUCH_HOST (exemplo: ["192.168.70.128", "192.168.70.129"]), o nome do Bucket criado na variável COUCH_BUCKET e o valor 0 na variável COUCH_INITIAL_VALUE (que é o valor inicial da chave do conteúdo que será inserido no BD).
-
 6 - View
-Para as pesquisas foram criadas views que consistem em funções de javascript para map dos dados dentro do CouchBase, as views são criadas dentro da interface web do CouchBase. Pode ser encontrado um guia para criação de view em http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-views-types.html
-
-
+  Para as pesquisas foram criadas views que consistem em funções de javascript para map dos dados dentro do CouchBase, as views são criadas dentro da interface web do CouchBase. Pode ser encontrado um guia para criação de view em <http://www.couchbase.com/docs/couchbase-manual-2.0/couchbase-views-types.html>
+  Foram criadas 2 views:
+    - com o nome "filter":
+    function (doc, meta) {
+       if (meta.type == "base64") {
+           emit("base64", doc)
+       }
+       else {
+           if (doc.read == false) {
+               emit(meta.id, doc);
+           }
+       }
+    }
+  
+    - com o nome "all":
+    function (doc, meta) {
+       emit(meta.id, doc)
+    }
+  
+  É necessário publicá-las (clicando em publish) para que o código tenha acesso à elas e funcione corretamente.
