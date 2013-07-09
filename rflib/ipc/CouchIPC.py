@@ -46,7 +46,8 @@ class CouchIPCMessageService(IPC.IPCMessageService):
         self._bucket = bucket
         self._connection = Couchbase.connect(
                 bucket=self._bucket,
-                host=self._host
+                host=self._host,
+                unlock_gil=False
             )
         self._id = id_
         self._threading = thread_constructor
@@ -55,8 +56,7 @@ class CouchIPCMessageService(IPC.IPCMessageService):
     
     #mudar...
     def listen(self, channel_id, factory, processor, block=True):
-        worker = self._threading(target=self._listen_worker,
-                                 args=(channel_id, factory, processor))
+        worker = self._threading(target=self._listen_worker, args=(channel_id, factory, processor))
         worker.start()
         if block:
             worker.join()
@@ -74,6 +74,7 @@ class CouchIPCMessageService(IPC.IPCMessageService):
         connection = Couchbase.connect(
                 bucket=self._bucket,
                 host=self._host,
+                unlock_gil=False
         )
         while True:
             cursor = connection.query("all", "filter")
